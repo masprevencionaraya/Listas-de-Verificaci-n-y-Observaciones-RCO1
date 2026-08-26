@@ -9,7 +9,7 @@
 <style>
   :root{
     --bg:#12161A; --surface:#1B2127; --surface-2:#242C33; --line:#323C45;
-    --brand:#C1272D; --brand-gray:#9B9D9E; --danger:#C1272D; --safe:#2FB57D;
+    --brand:#C1272D; --brand-gray:#9B9D9E; --danger:#C1272D; --safe:#2FB57D; --caution:#F0A400;
     --text:#EDEFF2; --text-dim:#8C97A3; --text-faint:#5C6773;
   }
   *{box-sizing:border-box;}
@@ -78,7 +78,21 @@
   }
   input:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(193,39,45,0.15);}
 
+  textarea{
+    width:100%;background:var(--surface);border:1px solid var(--line);color:var(--text);
+    padding:11px 12px;border-radius:7px;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;
+    resize:vertical;min-height:64px;transition:border-color .15s, box-shadow .15s;
+  }
+  textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(193,39,45,0.15);}
+
+  .field-block{margin-bottom:18px;}
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+
+  .rco-tag{
+    display:inline-flex;align-items:center;gap:6px;background:var(--brand);color:#FFF6F5;
+    font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;letter-spacing:0.08em;
+    text-transform:uppercase;padding:4px 10px;border-radius:20px;margin-bottom:10px;
+  }
 
   .checklist-section{border-top:1px solid var(--line);padding-top:16px;margin-top:4px;}
   .checklist-section h3{font-size:13px;font-weight:600;color:var(--text-dim);margin:0 0 12px;text-transform:none;font-family:'Inter',sans-serif;letter-spacing:0;}
@@ -94,6 +108,18 @@
   .seg button.sel-ok{background:rgba(47,181,125,0.18);border-color:var(--safe);color:var(--safe);}
   .seg button.sel-bad{background:rgba(193,39,45,0.18);border-color:var(--danger);color:var(--danger);}
   .seg button.sel-na{background:rgba(140,151,163,0.18);border-color:var(--text-dim);color:var(--text-dim);}
+
+  .comment-input{
+    width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    padding:7px 9px;border-radius:6px;font-size:11.5px;font-family:'Inter',sans-serif;outline:none;margin-top:8px;
+  }
+  .comment-input::placeholder{color:var(--text-faint);}
+  .comment-input:focus{border-color:var(--brand);}
+
+  .sai-banner{
+    background:rgba(240,164,0,0.12);border:1px solid rgba(240,164,0,0.4);color:var(--caution);
+    border-radius:8px;padding:12px 14px;font-size:11.5px;font-weight:600;line-height:1.5;margin:18px 0;
+  }
 
   .sig-section{border-top:1px solid var(--line);padding-top:16px;margin-top:16px;}
   .sig-frame{background:#fff;border-radius:8px;padding:2px;}
@@ -154,52 +180,48 @@
 
     <!-- Formulario -->
     <div class="panel">
-      <div class="eyebrow">Checklist · Pre-uso</div>
-      <h2>Verificación de herramientas</h2>
-      <p class="desc">Complete los campos obligatorios antes de iniciar operaciones en el frente de trabajo.</p>
+      <div class="rco-tag" id="rco-tag">RCO N°10</div>
+      <div class="eyebrow">Lista de observaciones y condiciones</div>
+      <h2 id="rco-nombre">Incendio</h2>
+      <p class="desc">Observe si se cumplen las siguientes acciones y condiciones seguras en el frente de trabajo.</p>
 
       <form id="checklist-form" onsubmit="saveChecklist(event)">
         <div class="grid-2">
           <div>
-            <label class="field-label">RUT operador / líder</label>
-            <input type="text" id="rut" required placeholder="12.345.678-9">
+            <label class="field-label">Empresa</label>
+            <input type="text" id="empresa" required placeholder="Ej: Salfa Montajes S.A.">
           </div>
           <div>
-            <label class="field-label">Área / frente de trabajo</label>
-            <input type="text" id="area" required placeholder="Ej: Chancado 01">
+            <label class="field-label">Proyecto / obra</label>
+            <input type="text" id="proyecto" required placeholder="Ej: Planta Chancado">
           </div>
+        </div>
+        <div class="grid-2">
+          <div>
+            <label class="field-label">Fecha / hora</label>
+            <input type="text" id="fecha-hora" required>
+          </div>
+          <div>
+            <label class="field-label">Responsable del área</label>
+            <input type="text" id="responsable" required placeholder="Nombre y cargo">
+          </div>
+        </div>
+        <div class="field-block">
+          <label class="field-label">Trabajo a realizar</label>
+          <textarea id="trabajo" required placeholder="Describa la actividad a ejecutar"></textarea>
         </div>
 
         <div class="checklist-section">
-          <h3>Puntos de control</h3>
-
-          <div class="check-item">
-            <div class="q">1. ¿Cables y enchufes sin grietas ni cortes?</div>
-            <div class="seg" data-item="item1">
-              <button type="button" onclick="setCheck('item1','CUMPLE',this)">Cumple</button>
-              <button type="button" onclick="setCheck('item1','NO_CUMPLE',this)">No cumple</button>
-              <button type="button" onclick="setCheck('item1','N/A',this)">N/A</button>
-            </div>
-          </div>
-
-          <div class="check-item">
-            <div class="q">2. ¿Cuenta con cinta del mes (código de colores)?</div>
-            <div class="seg" data-item="item2">
-              <button type="button" onclick="setCheck('item2','CUMPLE',this)">Cumple</button>
-              <button type="button" onclick="setCheck('item2','NO_CUMPLE',this)">No cumple</button>
-              <button type="button" onclick="setCheck('item2','N/A',this)">N/A</button>
-            </div>
-          </div>
-
-          <div class="check-item">
-            <div class="q">3. ¿EPP específico disponible y en buen estado?</div>
-            <div class="seg" data-item="item3">
-              <button type="button" onclick="setCheck('item3','CUMPLE',this)">Cumple</button>
-              <button type="button" onclick="setCheck('item3','NO_CUMPLE',this)">No cumple</button>
-              <button type="button" onclick="setCheck('item3','N/A',this)">N/A</button>
-            </div>
-          </div>
+          <h3>Acciones seguras — ¿se cumplen?</h3>
+          <div id="acciones-list"></div>
         </div>
+
+        <div class="checklist-section">
+          <h3>Condiciones seguras — ¿se cumplen?</h3>
+          <div id="condiciones-list"></div>
+        </div>
+
+        <div class="sai-banner">⚠ Los incumplimientos identificados deben ser reportados al Sistema de Administración de Incidentes (SAI).</div>
 
         <div class="sig-section">
           <label class="field-label">Firma digital del supervisor / prevencionista</label>
@@ -275,15 +297,96 @@
     signed = false;
   }
 
+  // ---------- Datos RCO ----------
+  const RCO = {
+    numero: 10,
+    nombre: 'Incendio',
+    acciones: [
+      'Trabajadores instalan extintores en terreno cuando se ejecutan trabajos en caliente',
+      'Trabajadores identifican elementos combustibles cercanos, los retira, aísla y/o protege para prevenir su combustión',
+      'Trabajadores verifican el estado de sus herramientas antes de utilizar',
+      'Trabajadores respetan la prohibición de fumar en lugares de trabajo',
+      'Respetan la prohibición de fumar en carguío de combustible',
+      'Respetan la prohibición de fumar en Bodegas de Sustancias Peligrosas',
+      'Trabajadores manipulan cilindros de gases de acuerdo a procedimiento, en vertical, en carros de transporte asegurados',
+      'Trabajadores utilizan elementos de protección personal adecuados para trabajos con llama abierta o en caliente'
+    ],
+    condiciones: [
+      'La instalación eléctrica de la faena se encuentra normada',
+      'Existe la prohibición de fumar en lugares de trabajo',
+      'Los lugares habilitados para fumar cuentan con equipo de extinción de incendio',
+      'Existen elementos de extinción de incendio y estos fueron calculados previamente',
+      'Los equipos de extinción de incendio están señalizados correctamente',
+      'Los equipos de extinción de incendio son inspeccionados regularmente',
+      'Los equipos de extinción de incendio son adecuados a la clase de material combustible',
+      'Los trabajos en caliente son delimitados y señalizados',
+      'Se humectan las áreas previo al inicio de trabajos en caliente',
+      'Se protegen las escalerillas eléctricas de la proyección de chispas',
+      'Se protegen equipos electromecánicos con partes combustibles de la proyección de chispas'
+    ]
+  };
+
+  document.getElementById('rco-tag').textContent = 'RCO N°' + RCO.numero;
+  document.getElementById('rco-nombre').textContent = RCO.nombre;
+
+  function formatNow(){
+    const now = new Date();
+    return now.toLocaleDateString('es-CL') + ' ' + now.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+  }
+  document.getElementById('fecha-hora').value = formatNow();
+
   // ---------- Checklist toggles ----------
-  const checkValues = {};
-  function setCheck(item, value, btnEl){
-    checkValues[item] = value;
+  const checkValues = { acciones: {}, condiciones: {} };
+  const comments = { acciones: {}, condiciones: {} };
+
+  function setCheck(sectionKey, idx, value, btnEl){
+    checkValues[sectionKey][idx] = value;
     const group = btnEl.parentElement.querySelectorAll('button');
     group.forEach(b=>b.classList.remove('sel-ok','sel-bad','sel-na'));
-    if(value==='CUMPLE') btnEl.classList.add('sel-ok');
-    else if(value==='NO_CUMPLE') btnEl.classList.add('sel-bad');
+    if(value==='SI') btnEl.classList.add('sel-ok');
+    else if(value==='NO') btnEl.classList.add('sel-bad');
     else btnEl.classList.add('sel-na');
+  }
+
+  function buildChecklist(sectionKey, items, containerId){
+    const container = document.getElementById(containerId);
+    items.forEach((text, idx)=>{
+      const item = document.createElement('div');
+      item.className = 'check-item';
+
+      const q = document.createElement('div');
+      q.className = 'q';
+      q.textContent = (idx+1) + '. ' + text;
+      item.appendChild(q);
+
+      const seg = document.createElement('div');
+      seg.className = 'seg';
+      ['SI','NO','N/A'].forEach(value=>{
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = value;
+        btn.addEventListener('click', ()=>setCheck(sectionKey, idx, value, btn));
+        seg.appendChild(btn);
+      });
+      item.appendChild(seg);
+
+      const comment = document.createElement('input');
+      comment.type = 'text';
+      comment.className = 'comment-input';
+      comment.placeholder = 'Comentario (opcional)';
+      comment.addEventListener('input', ()=>{ comments[sectionKey][idx] = comment.value; });
+      item.appendChild(comment);
+
+      container.appendChild(item);
+    });
+  }
+
+  buildChecklist('acciones', RCO.acciones, 'acciones-list');
+  buildChecklist('condiciones', RCO.condiciones, 'condiciones-list');
+
+  function allAnswered(values, count){
+    for(let i=0;i<count;i++){ if(!values[i]) return false; }
+    return true;
   }
 
   // ---------- Toast ----------
@@ -329,8 +432,8 @@
   async function saveChecklist(e){
     e.preventDefault();
 
-    if(!checkValues.item1 || !checkValues.item2 || !checkValues.item3){
-      showToast('Responde los 3 puntos de control antes de guardar.', true);
+    if(!allAnswered(checkValues.acciones, RCO.acciones.length) || !allAnswered(checkValues.condiciones, RCO.condiciones.length)){
+      showToast('Responde todos los puntos de acciones y condiciones antes de guardar.', true);
       return;
     }
     if(!signed){
@@ -342,12 +445,21 @@
     submitBtn.disabled = true;
     submitBtn.textContent = 'Guardando…';
 
+    const buildRows = (items, values, comm) => items.map((text, idx)=>({
+      item: text, valor: values[idx], comentario: comm[idx] || ''
+    }));
+
     const record = {
-      id: 'CHK-' + Date.now(),
+      id: 'RCO' + RCO.numero + '-' + Date.now(),
+      rco: { numero: RCO.numero, nombre: RCO.nombre },
       timestamp: new Date().toISOString(),
-      rut: document.getElementById('rut').value,
-      area: document.getElementById('area').value,
-      items: { ...checkValues },
+      empresa: document.getElementById('empresa').value,
+      proyecto: document.getElementById('proyecto').value,
+      fechaHora: document.getElementById('fecha-hora').value,
+      responsable: document.getElementById('responsable').value,
+      trabajo: document.getElementById('trabajo').value,
+      acciones: buildRows(RCO.acciones, checkValues.acciones, comments.acciones),
+      condiciones: buildRows(RCO.condiciones, checkValues.condiciones, comments.condiciones),
       signature: canvas.toDataURL(),
       synced: false
     };
@@ -363,8 +475,11 @@
       showToast('✅ Inspección guardada en el dispositivo.');
       document.getElementById('checklist-form').reset();
       clearSignature();
-      Object.keys(checkValues).forEach(k=>delete checkValues[k]);
+      checkValues.acciones = {}; checkValues.condiciones = {};
+      comments.acciones = {}; comments.condiciones = {};
       document.querySelectorAll('.seg button').forEach(b=>b.classList.remove('sel-ok','sel-bad','sel-na'));
+      document.querySelectorAll('.comment-input').forEach(i=>i.value='');
+      document.getElementById('fecha-hora').value = formatNow();
       updatePendingCount();
     } else {
       showToast('No se pudo guardar. Intenta nuevamente.', true);
