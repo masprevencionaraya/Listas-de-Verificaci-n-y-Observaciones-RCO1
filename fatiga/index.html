@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>TURNO·SEGURO — Control de Fatiga Operacional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12161A;
+    --surface:#1B2127;
+    --surface-2:#242C33;
+    --line:#323C45;
+    --amber:#F5B400;
+    --amber-dim:#8a6600;
+    --orange:#FF6A3D;
+    --danger:#E5453D;
+    --safe:#2FB57D;
+    --text:#EDEFF2;
+    --text-dim:#8C97A3;
+    --text-faint:#5C6773;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(1100px 500px at 15% -10%, rgba(245,180,0,0.07), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Barlow Condensed',sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.02em;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .hairline{border-color:var(--line);}
+
+  /* ===== App shell ===== */
+  .app-shell{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;background:var(--surface);border-left:1px solid var(--line);border-right:1px solid var(--line);}
+  @media(min-width:521px){.app-shell{min-height:100vh;}}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:14px 18px;
+    background:linear-gradient(180deg, var(--surface-2), var(--surface));
+    border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:20;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:6px;
+    background:repeating-linear-gradient(45deg, var(--amber), var(--amber) 6px, #1a1a1a 6px, #1a1a1a 12px);
+    position:relative;flex-shrink:0;
+  }
+  .brand-mark::after{
+    content:"";position:absolute;inset:5px;background:var(--surface);border-radius:3px;
+    display:flex;
+  }
+  .brand-text{line-height:1;}
+  .brand-text .name{font-size:19px;font-weight:800;color:var(--text);letter-spacing:0.03em;}
+  .brand-text .sub{font-size:9.5px;color:var(--text-faint);letter-spacing:0.14em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+
+  .clock-chip{
+    text-align:right;font-family:'IBM Plex Mono',monospace;
+  }
+  .clock-chip .t{font-size:14px;color:var(--amber);font-weight:600;}
+  .clock-chip .d{font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.08em;}
+
+  /* ===== Tab nav ===== */
+  .tabnav{display:flex;border-bottom:1px solid var(--line);background:var(--surface);}
+  .tabnav button{
+    flex:1;padding:12px 8px;background:none;border:none;color:var(--text-faint);
+    font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;
+    cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;
+  }
+  .tabnav button.active{color:var(--amber);border-bottom-color:var(--amber);}
+  .tabnav button:not(.active):hover{color:var(--text-dim);}
+
+  main{flex:1;padding:20px 18px 32px;}
+
+  /* ===== Cards / fields ===== */
+  .panel{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:18px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--amber);
+    letter-spacing:0.16em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:8px;
+  }
+  .eyebrow::before{content:"";width:16px;height:2px;background:var(--amber);display:inline-block;}
+
+  label.field-label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:6px;font-weight:500;letter-spacing:0.02em;}
+  input[type=text],input[type=number],select{
+    width:100%;background:var(--surface);border:1px solid var(--line);color:var(--text);
+    padding:12px 12px;border-radius:7px;font-size:15px;font-family:'IBM Plex Mono',monospace;
+    outline:none;transition:border-color .15s, box-shadow .15s;
+  }
+  input:focus,select:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,180,0,0.15);}
+  select{font-family:'Inter',sans-serif;appearance:none;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%238C97A3"/></svg>');background-repeat:no-repeat;background-position:right 14px center;padding-right:32px;}
+  .field-gap{margin-bottom:16px;}
+
+  .energy-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .energy-opt{
+    border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:10px 6px;text-align:center;cursor:pointer;transition:all .15s;
+  }
+  .energy-opt .ic{font-size:20px;display:block;margin-bottom:4px;}
+  .energy-opt .lb{font-size:10.5px;color:var(--text-faint);line-height:1.2;}
+  .energy-opt.sel{border-color:var(--amber);background:rgba(245,180,0,0.08);}
+  .energy-opt.sel .lb{color:var(--amber);}
+
+  .btn-primary{
+    width:100%;padding:15px;border:none;border-radius:8px;cursor:pointer;
+    background:var(--amber);color:#1a1400;font-weight:700;font-size:14px;
+    font-family:'Barlow Condensed',sans-serif;letter-spacing:0.08em;text-transform:uppercase;
+    transition:transform .1s, background .15s;
+  }
+  .btn-primary:hover{background:#ffc61a;}
+  .btn-primary:active{transform:scale(0.98);}
+  .btn-primary:disabled{background:var(--line);color:var(--text-faint);cursor:not-allowed;}
+  .btn-ghost{
+    width:100%;padding:12px;border:1px solid var(--line);border-radius:8px;background:transparent;color:var(--text-dim);
+    font-family:'Barlow Condensed',sans-serif;letter-spacing:0.08em;text-transform:uppercase;font-size:13px;font-weight:600;cursor:pointer;
+  }
+  .btn-ghost:hover{border-color:var(--text-dim);color:var(--text);}
+
+  /* ===== Reaction test ===== */
+  .reaction-stage{
+    height:220px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    cursor:pointer;user-select:none;transition:background .15s;text-align:center;padding:16px;
+    border:1px solid var(--line);
+  }
+  .reaction-stage.wait{background:repeating-linear-gradient(135deg, #2a1414, #2a1414 10px, #241111 10px, #241111 20px);}
+  .reaction-stage.go{background:var(--safe);animation:pulse-go .6s ease-in-out infinite alternate;}
+  @keyframes pulse-go{from{background:var(--safe);}to{background:#25a06c;}}
+  .reaction-stage .big{font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:800;letter-spacing:0.03em;text-transform:uppercase;color:#fff;}
+  .reaction-stage .small{font-size:12px;color:rgba(255,255,255,0.75);margin-top:6px;}
+
+  /* ===== Gauge (signature element) ===== */
+  .gauge-wrap{display:flex;flex-direction:column;align-items:center;padding:6px 0 2px;}
+  .gauge-value{margin-top:-58px;text-align:center;}
+  .gauge-value .n{font-family:'IBM Plex Mono',monospace;font-size:30px;font-weight:600;}
+  .gauge-value .u{font-size:10.5px;color:var(--text-faint);letter-spacing:0.1em;text-transform:uppercase;}
+  .gauge-label{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase;margin-top:6px;}
+
+  .metric-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;}
+  .metric-box{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;text-align:center;}
+  .metric-box .v{font-family:'IBM Plex Mono',monospace;font-size:18px;font-weight:600;color:var(--text);}
+  .metric-box .l{font-size:9.5px;color:var(--text-faint);letter-spacing:0.08em;text-transform:uppercase;margin-top:3px;}
+
+  .action-note{font-size:12px;color:var(--text-dim);text-align:center;margin-top:14px;line-height:1.5;}
+
+  /* ===== History ===== */
+  .hist-item{
+    display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);margin-bottom:8px;
+  }
+  .hist-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+  .hist-body{flex:1;min-width:0;}
+  .hist-id{font-size:13px;font-weight:600;color:var(--text);font-family:'IBM Plex Mono',monospace;}
+  .hist-meta{font-size:11px;color:var(--text-faint);margin-top:2px;}
+  .hist-status{font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;border-radius:20px;flex-shrink:0;}
+  .empty-state{text-align:center;padding:40px 10px;color:var(--text-faint);}
+  .empty-state .ic{font-size:32px;margin-bottom:10px;opacity:0.5;}
+  .empty-state p{font-size:13px;margin:0;}
+
+  .stats-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px;}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px 8px;text-align:center;}
+  .stat .v{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;}
+  .stat .l{font-size:9px;color:var(--text-faint);letter-spacing:0.06em;text-transform:uppercase;margin-top:2px;}
+
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <div class="name">TURNO·SEGURO</div>
+        <div class="sub">Control operacional de fatiga</div>
+      </div>
+    </div>
+    <div class="clock-chip">
+      <div class="t" id="clock-time">--:--</div>
+      <div class="d" id="clock-date">--</div>
+    </div>
+  </div>
+
+  <!-- TAB NAV -->
+  <div class="tabnav">
+    <button id="tab-eval-btn" class="active" onclick="switchTab('eval')">Nueva evaluación</button>
+    <button id="tab-hist-btn" onclick="switchTab('hist')">Historial de turno</button>
+  </div>
+
+  <main>
+
+    <!-- ============ TAB: EVALUACIÓN ============ -->
+    <section id="tab-eval">
+
+      <!-- Paso 1: Encuesta -->
+      <div id="step-survey" class="panel">
+        <div class="eyebrow">Paso 01 · Autoevaluación</div>
+        <h2 style="font-size:22px;margin:0 0 16px;color:var(--text);">Antes de subir a la máquina</h2>
+
+        <div class="field-gap">
+          <label class="field-label">Operador / RUT</label>
+          <input type="text" id="operator-id" placeholder="12.345.678-K">
+        </div>
+
+        <div class="field-gap">
+          <label class="field-label">Horas dormidas anoche</label>
+          <input type="number" id="sleep-hours" min="0" max="24" step="0.5" placeholder="Ej: 7">
+        </div>
+
+        <div class="field-gap">
+          <label class="field-label">Nivel de energía percibido</label>
+          <div class="energy-row" id="energy-row">
+            <div class="energy-opt" data-val="3" onclick="selectEnergy(3)">
+              <span class="ic">🟢</span><span class="lb">Alerta</span>
+            </div>
+            <div class="energy-opt" data-val="2" onclick="selectEnergy(2)">
+              <span class="ic">🟡</span><span class="lb">Normal</span>
+            </div>
+            <div class="energy-opt" data-val="1" onclick="selectEnergy(1)">
+              <span class="ic">🔴</span><span class="lb">Agotado</span>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn-primary" onclick="startReactionTest()">Iniciar test de reacción →</button>
+      </div>
+
+      <!-- Paso 2: Test de reacción -->
+      <div id="step-test" class="hidden">
+        <div class="eyebrow">Paso 02 · Test de reacción</div>
+        <h2 style="font-size:22px;margin:0 0 14px;color:var(--text);">Toca apenas veas verde</h2>
+        <div id="reaction-box" class="reaction-stage wait" onclick="handleBoxClick()">
+          <span class="big" id="reaction-text">Espera…</span>
+          <span class="small" id="reaction-sub">No toques todavía</span>
+        </div>
+      </div>
+
+      <!-- Paso 3: Resultado -->
+      <div id="step-result" class="hidden">
+        <div class="eyebrow">Paso 03 · Resultado</div>
+        <div class="panel" style="padding-top:22px;">
+          <div class="gauge-wrap">
+            <svg id="gauge-svg" width="220" height="130" viewBox="0 0 220 130">
+              <path d="M 15 115 A 95 95 0 0 1 205 115" fill="none" stroke="#2a323a" stroke-width="16" stroke-linecap="round"/>
+              <path id="gauge-fill" d="M 15 115 A 95 95 0 0 1 205 115" fill="none" stroke="var(--safe)" stroke-width="16" stroke-linecap="round" stroke-dasharray="298" stroke-dashoffset="298"/>
+              <line id="gauge-needle" x1="110" y1="115" x2="110" y2="35" stroke="#EDEFF2" stroke-width="3" stroke-linecap="round" transform="rotate(-90 110 115)"/>
+              <circle cx="110" cy="115" r="7" fill="#EDEFF2"/>
+            </svg>
+            <div class="gauge-value">
+              <div class="n" id="gauge-number">--</div>
+              <div class="u">índice de fatiga</div>
+            </div>
+          </div>
+          <div class="gauge-label" id="result-title" style="text-align:center;"></div>
+          <p class="action-note" id="result-note"></p>
+
+          <div class="metric-row">
+            <div class="metric-box">
+              <div class="v" id="res-time">--</div>
+              <div class="l">ms reacción</div>
+            </div>
+            <div class="metric-box">
+              <div class="v" id="res-hours">--</div>
+              <div class="l">hrs de sueño</div>
+            </div>
+          </div>
+
+          <div style="margin-top:18px;">
+            <button class="btn-ghost" onclick="resetForm()">Realizar otra evaluación</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ============ TAB: HISTORIAL ============ -->
+    <section id="tab-hist" class="hidden">
+      <div class="stats-strip">
+        <div class="stat"><div class="v" id="stat-total" style="color:var(--text);">0</div><div class="l">Evaluados</div></div>
+        <div class="stat"><div class="v" id="stat-alert" style="color:var(--danger);">0</div><div class="l">Alto riesgo</div></div>
+        <div class="stat"><div class="v" id="stat-ok" style="color:var(--safe);">0</div><div class="l">Aptos</div></div>
+      </div>
+      <div id="history-list"></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // ---------- Reloj ----------
+  function tickClock(){
+    const now = new Date();
+    document.getElementById('clock-time').textContent = now.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('clock-date').textContent = now.toLocaleDateString('es-CL',{weekday:'short',day:'2-digit',month:'short'}).toUpperCase();
+  }
+  tickClock(); setInterval(tickClock, 15000);
+
+  // ---------- Estado ----------
+  let startTime = null, timer = null, reactionTime = 0, energyLevel = null;
+  let history = []; // {id, hours, energy, reaction, risk, time}
+
+  function selectEnergy(val){
+    energyLevel = val;
+    document.querySelectorAll('.energy-opt').forEach(el=>{
+      el.classList.toggle('sel', parseInt(el.dataset.val) === val);
+    });
+  }
+
+  function switchTab(tab){
+    const evalBtn = document.getElementById('tab-eval-btn');
+    const histBtn = document.getElementById('tab-hist-btn');
+    document.getElementById('tab-eval').classList.toggle('hidden', tab !== 'eval');
+    document.getElementById('tab-hist').classList.toggle('hidden', tab !== 'hist');
+    evalBtn.classList.toggle('active', tab === 'eval');
+    histBtn.classList.toggle('active', tab === 'hist');
+    if(tab === 'hist') renderHistory();
+  }
+
+  function startReactionTest(){
+    const id = document.getElementById('operator-id').value.trim();
+    const hours = document.getElementById('sleep-hours').value;
+    if(!id || !hours || energyLevel === null){
+      alert('Completa operador, horas de sueño y nivel de energía antes de continuar.');
+      return;
+    }
+
+    document.getElementById('step-survey').classList.add('hidden');
+    document.getElementById('step-result').classList.add('hidden');
+    document.getElementById('step-test').classList.remove('hidden');
+
+    const box = document.getElementById('reaction-box');
+    box.className = 'reaction-stage wait';
+    document.getElementById('reaction-text').textContent = 'Espera…';
+    document.getElementById('reaction-sub').textContent = 'No toques todavía';
+    startTime = null;
+
+    const randomDelay = Math.floor(Math.random()*3000)+2000;
+    timer = setTimeout(()=>{
+      box.className = 'reaction-stage go';
+      document.getElementById('reaction-text').textContent = '¡Toca ahora!';
+      document.getElementById('reaction-sub').textContent = '';
+      startTime = Date.now();
+    }, randomDelay);
+  }
+
+  function handleBoxClick(){
+    if(!startTime){
+      clearTimeout(timer);
+      alert('Muy pronto. Espera a que la caja cambie a verde.');
+      startReactionTest();
+      return;
+    }
+    reactionTime = Date.now() - startTime;
+    startTime = null;
+    calculateRisk();
+  }
+
+  function calculateRisk(){
+    const hours = parseFloat(document.getElementById('sleep-hours').value);
+    const operatorId = document.getElementById('operator-id').value.trim();
+    const energy = energyLevel;
+
+    document.getElementById('step-test').classList.add('hidden');
+    document.getElementById('step-result').classList.remove('hidden');
+    document.getElementById('res-time').textContent = reactionTime;
+    document.getElementById('res-hours').textContent = hours;
+
+    const isHighRisk = hours < 5 || energy === 1 || reactionTime > 500;
+    const isMediumRisk = !isHighRisk && ((hours >= 5 && hours < 7) || energy === 2 || (reactionTime > 350 && reactionTime <= 500));
+
+    let risk, color, title, note, score;
+    if(isHighRisk){
+      risk='alto'; color='var(--danger)'; score = 88;
+      title = '🔴 Alto riesgo'; note = 'No apto para operar. Se notifica a supervisor de turno.';
+    } else if(isMediumRisk){
+      risk='moderado'; color='var(--amber)'; score = 52;
+      title = '🟡 Riesgo moderado'; note = 'Apto con precaución. Se sugiere pausa activa antes de iniciar.';
+    } else {
+      risk='apto'; color='var(--safe)'; score = 15;
+      title = '🟢 Operador apto'; note = 'Sin hallazgos de fatiga. Buen turno.';
+    }
+
+    document.getElementById('result-title').textContent = title;
+    document.getElementById('result-title').style.color = color;
+    document.getElementById('result-note').textContent = note;
+    document.getElementById('gauge-number').textContent = score;
+    document.getElementById('gauge-number').style.color = color;
+
+    const fill = document.getElementById('gauge-fill');
+    fill.setAttribute('stroke', color);
+    const circumference = 298;
+    fill.style.strokeDashoffset = circumference - (circumference * score/100);
+
+    const needle = document.getElementById('gauge-needle');
+    const angle = -90 + (score/100)*180;
+    needle.setAttribute('transform', `rotate(${angle} 110 115)`);
+
+    history.unshift({
+      id: operatorId, hours, energy, reaction: reactionTime, risk, time: new Date()
+    });
+  }
+
+  function resetForm(){
+    document.getElementById('step-result').classList.add('hidden');
+    document.getElementById('step-survey').classList.remove('hidden');
+    document.getElementById('sleep-hours').value='';
+    document.getElementById('operator-id').value='';
+    energyLevel = null;
+    document.querySelectorAll('.energy-opt').forEach(el=>el.classList.remove('sel'));
+  }
+
+  function riskColor(risk){
+    return risk==='alto' ? 'var(--danger)' : risk==='moderado' ? 'var(--amber)' : 'var(--safe)';
+  }
+  function riskLabel(risk){
+    return risk==='alto' ? 'Alto riesgo' : risk==='moderado' ? 'Moderado' : 'Apto';
+  }
+
+  function renderHistory(){
+    document.getElementById('stat-total').textContent = history.length;
+    document.getElementById('stat-alert').textContent = history.filter(h=>h.risk==='alto').length;
+    document.getElementById('stat-ok').textContent = history.filter(h=>h.risk==='apto').length;
+
+    const list = document.getElementById('history-list');
+    if(history.length === 0){
+      list.innerHTML = `<div class="empty-state"><div class="ic">📋</div><p>Aún no hay evaluaciones registradas<br>en este turno.</p></div>`;
+      return;
+    }
+    list.innerHTML = history.map(h=>`
+      <div class="hist-item">
+        <div class="hist-dot" style="background:${riskColor(h.risk)}"></div>
+        <div class="hist-body">
+          <div class="hist-id">${h.id || 'Sin ID'}</div>
+          <div class="hist-meta">${h.hours} hrs sueño · ${h.reaction} ms · ${h.time.toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div class="hist-status" style="color:${riskColor(h.risk)};background:${riskColor(h.risk)}22;">${riskLabel(h.risk)}</div>
+      </div>
+    `).join('');
+  }
+</script>
+</body>
+</html>

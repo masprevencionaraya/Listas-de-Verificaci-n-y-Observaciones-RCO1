@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SALFA MONTAJES — Prevención de Riesgos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12161A; --surface:#1B2127; --surface-2:#242C33; --line:#323C45;
+    --amber:#F5B400; --danger:#E5453D; --safe:#2FB57D;
+    --text:#EDEFF2; --text-dim:#8C97A3; --text-faint:#5C6773;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(1100px 500px at 15% -10%, rgba(245,180,0,0.07), transparent 60%), var(--bg);
+    color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;letter-spacing:0.02em;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+
+  .app-shell{max-width:520px;margin:0 auto;min-height:100vh;background:var(--surface);border-left:1px solid var(--line);border-right:1px solid var(--line);}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;padding:14px 18px;
+    background:linear-gradient(180deg, var(--surface-2), var(--surface));
+    border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;
+  }
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand-mark{
+    width:34px;height:34px;border-radius:6px;
+    background:repeating-linear-gradient(45deg, var(--amber), var(--amber) 6px, #1a1a1a 6px, #1a1a1a 12px);
+    position:relative;flex-shrink:0;
+  }
+  .brand-mark::after{content:"";position:absolute;inset:5px;background:var(--surface);border-radius:3px;}
+  .brand-text .name{font-size:17px;font-weight:800;color:var(--text);letter-spacing:0.02em;line-height:1.1;}
+  .brand-text .sub{font-size:9.5px;color:var(--text-faint);letter-spacing:0.12em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
+
+  .net-chip{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;}
+  .net-chip.online{background:rgba(47,181,125,0.15);color:var(--safe);border:1px solid rgba(47,181,125,0.35);}
+  .net-chip.offline{background:rgba(229,69,61,0.15);color:var(--danger);border:1px solid rgba(229,69,61,0.35);}
+  .net-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+  .net-chip.online .net-dot{animation:blink 1.6s ease-in-out infinite;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:0.35;}}
+
+  main{padding:18px 18px 40px;}
+
+  .sync-panel{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:18px;
+  }
+  .sync-panel .lbl{font-size:11px;color:var(--text-faint);letter-spacing:0.04em;}
+  .sync-panel .count{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:600;color:var(--text);line-height:1.1;margin-top:2px;}
+  .sync-panel .count .unit{font-size:11px;color:var(--text-dim);font-weight:400;font-family:'Inter',sans-serif;margin-left:6px;}
+  .btn-sync{
+    background:var(--amber);color:#1a1400;border:none;border-radius:8px;padding:12px 18px;
+    font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:0.06em;text-transform:uppercase;
+    cursor:pointer;white-space:nowrap;transition:background .15s, transform .1s;
+  }
+  .btn-sync:hover{background:#ffc61a;} .btn-sync:active{transform:scale(0.97);}
+  .btn-sync:disabled{background:var(--line);color:var(--text-faint);cursor:not-allowed;}
+
+  .panel{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:20px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--amber);letter-spacing:0.16em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+  .eyebrow::before{content:"";width:16px;height:2px;background:var(--amber);display:inline-block;}
+  .panel h2{font-size:20px;margin:0 0 4px;color:var(--text);}
+  .panel .desc{font-size:12px;color:var(--text-faint);margin:0 0 18px;line-height:1.4;}
+
+  label.field-label{display:block;font-size:11.5px;color:var(--text-dim);margin-bottom:6px;font-weight:500;}
+  input[type=text]{
+    width:100%;background:var(--surface);border:1px solid var(--line);color:var(--text);
+    padding:11px 12px;border-radius:7px;font-size:14px;font-family:'IBM Plex Mono',monospace;outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  input:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,180,0,0.15);}
+
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+
+  .checklist-section{border-top:1px solid var(--line);padding-top:16px;margin-top:4px;}
+  .checklist-section h3{font-size:13px;font-weight:600;color:var(--text-dim);margin:0 0 12px;text-transform:none;font-family:'Inter',sans-serif;letter-spacing:0;}
+
+  .check-item{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:10px;}
+  .check-item .q{font-size:12.5px;color:var(--text);margin-bottom:10px;line-height:1.4;}
+  .seg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+  .seg button{
+    border:1px solid var(--line);background:var(--surface-2);color:var(--text-faint);
+    padding:8px 4px;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;
+    font-family:'Barlow Condensed',sans-serif;letter-spacing:0.03em;text-transform:uppercase;transition:all .15s;
+  }
+  .seg button.sel-ok{background:rgba(47,181,125,0.18);border-color:var(--safe);color:var(--safe);}
+  .seg button.sel-bad{background:rgba(229,69,61,0.18);border-color:var(--danger);color:var(--danger);}
+  .seg button.sel-na{background:rgba(140,151,163,0.18);border-color:var(--text-dim);color:var(--text-dim);}
+
+  .sig-section{border-top:1px solid var(--line);padding-top:16px;margin-top:16px;}
+  .sig-frame{background:#fff;border-radius:8px;padding:2px;}
+  #signature-pad{width:100%;height:130px;display:block;border-radius:6px;touch-action:none;}
+  .sig-actions{display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+  .sig-hint{font-size:10.5px;color:var(--text-faint);}
+  .link-btn{background:none;border:none;color:var(--text-faint);font-size:11px;cursor:pointer;text-decoration:underline;padding:0;}
+  .link-btn:hover{color:var(--amber);}
+
+  .btn-primary{
+    width:100%;padding:15px;border:none;border-radius:8px;cursor:pointer;margin-top:18px;
+    background:var(--safe);color:#08251a;font-weight:700;font-size:14px;
+    font-family:'Barlow Condensed',sans-serif;letter-spacing:0.08em;text-transform:uppercase;
+    transition:background .15s, transform .1s;
+  }
+  .btn-primary:hover{background:#3ac98e;} .btn-primary:active{transform:scale(0.99);}
+
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+    background:var(--surface-2);border:1px solid var(--line);border-left:3px solid var(--safe);
+    color:var(--text);padding:12px 16px;border-radius:8px;font-size:13px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);z-index:50;max-width:88%;text-align:center;
+    opacity:0;pointer-events:none;transition:opacity .25s, transform .25s;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-4px);}
+  .toast.err{border-left-color:var(--danger);}
+
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-text">
+        <div class="name">SALFA MONTAJES</div>
+        <div class="sub">Inspección de prevención · HSE</div>
+      </div>
+    </div>
+    <div class="net-chip online" id="net-chip">
+      <span class="net-dot"></span><span id="net-text">EN LÍNEA</span>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- Cola de sincronización -->
+    <div class="sync-panel">
+      <div>
+        <div class="lbl">Registros en este dispositivo</div>
+        <div class="count"><span id="pending-count">0</span><span class="unit">pendientes</span></div>
+      </div>
+      <button class="btn-sync" id="sync-btn" onclick="syncData()">Sincronizar</button>
+    </div>
+
+    <!-- Formulario -->
+    <div class="panel">
+      <div class="eyebrow">Checklist · Pre-uso</div>
+      <h2>Verificación de herramientas</h2>
+      <p class="desc">Complete los campos obligatorios antes de iniciar operaciones en el frente de trabajo.</p>
+
+      <form id="checklist-form" onsubmit="saveChecklist(event)">
+        <div class="grid-2">
+          <div>
+            <label class="field-label">RUT operador / líder</label>
+            <input type="text" id="rut" required placeholder="12.345.678-9">
+          </div>
+          <div>
+            <label class="field-label">Área / frente de trabajo</label>
+            <input type="text" id="area" required placeholder="Ej: Chancado 01">
+          </div>
+        </div>
+
+        <div class="checklist-section">
+          <h3>Puntos de control</h3>
+
+          <div class="check-item">
+            <div class="q">1. ¿Cables y enchufes sin grietas ni cortes?</div>
+            <div class="seg" data-item="item1">
+              <button type="button" onclick="setCheck('item1','CUMPLE',this)">Cumple</button>
+              <button type="button" onclick="setCheck('item1','NO_CUMPLE',this)">No cumple</button>
+              <button type="button" onclick="setCheck('item1','N/A',this)">N/A</button>
+            </div>
+          </div>
+
+          <div class="check-item">
+            <div class="q">2. ¿Cuenta con cinta del mes (código de colores)?</div>
+            <div class="seg" data-item="item2">
+              <button type="button" onclick="setCheck('item2','CUMPLE',this)">Cumple</button>
+              <button type="button" onclick="setCheck('item2','NO_CUMPLE',this)">No cumple</button>
+              <button type="button" onclick="setCheck('item2','N/A',this)">N/A</button>
+            </div>
+          </div>
+
+          <div class="check-item">
+            <div class="q">3. ¿EPP específico disponible y en buen estado?</div>
+            <div class="seg" data-item="item3">
+              <button type="button" onclick="setCheck('item3','CUMPLE',this)">Cumple</button>
+              <button type="button" onclick="setCheck('item3','NO_CUMPLE',this)">No cumple</button>
+              <button type="button" onclick="setCheck('item3','N/A',this)">N/A</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sig-section">
+          <label class="field-label">Firma digital del supervisor / prevencionista</label>
+          <div class="sig-frame">
+            <canvas id="signature-pad"></canvas>
+          </div>
+          <div class="sig-actions">
+            <span class="sig-hint">Dibuje con el dedo o el mouse</span>
+            <button type="button" class="link-btn" onclick="clearSignature()">Limpiar firma</button>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-primary" id="submit-btn">Guardar inspección</button>
+      </form>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ---------- Estado de red ----------
+  function updateOnlineStatus(){
+    const chip = document.getElementById('net-chip');
+    const txt = document.getElementById('net-text');
+    if(navigator.onLine){
+      chip.className = 'net-chip online'; txt.textContent = 'EN LÍNEA';
+    } else {
+      chip.className = 'net-chip offline'; txt.textContent = 'MODO OFFLINE';
+    }
+  }
+  window.addEventListener('online', updateOnlineStatus);
+  window.addEventListener('offline', updateOnlineStatus);
+  updateOnlineStatus();
+
+  // ---------- Firma (canvas) ----------
+  const canvas = document.getElementById('signature-pad');
+  const ctx = canvas.getContext('2d');
+  let drawing = false;
+
+  function resizeCanvas(){
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    ctx.scale(ratio, ratio);
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+  }
+  window.addEventListener('resize', resizeCanvas);
+  setTimeout(resizeCanvas, 80);
+
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: clientX - rect.left, y: clientY - rect.top };
+  }
+  canvas.addEventListener('mousedown', e=>{drawing=true; ctx.beginPath(); const p=getPos(e); ctx.moveTo(p.x,p.y);});
+  canvas.addEventListener('mousemove', e=>{if(drawing){const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke();}});
+  window.addEventListener('mouseup', ()=>drawing=false);
+  canvas.addEventListener('touchstart', e=>{drawing=true; ctx.beginPath(); const p=getPos(e); ctx.moveTo(p.x,p.y); e.preventDefault();});
+  canvas.addEventListener('touchmove', e=>{if(drawing){const p=getPos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); e.preventDefault();}});
+  canvas.addEventListener('touchend', ()=>drawing=false);
+
+  let signed = false;
+  canvas.addEventListener('mousedown', ()=>signed=true);
+  canvas.addEventListener('touchstart', ()=>signed=true);
+
+  function clearSignature(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    signed = false;
+  }
+
+  // ---------- Checklist toggles ----------
+  const checkValues = {};
+  function setCheck(item, value, btnEl){
+    checkValues[item] = value;
+    const group = btnEl.parentElement.querySelectorAll('button');
+    group.forEach(b=>b.classList.remove('sel-ok','sel-bad','sel-na'));
+    if(value==='CUMPLE') btnEl.classList.add('sel-ok');
+    else if(value==='NO_CUMPLE') btnEl.classList.add('sel-bad');
+    else btnEl.classList.add('sel-na');
+  }
+
+  // ---------- Toast ----------
+  let toastTimer;
+  function showToast(msg, isErr=false){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show' + (isErr ? ' err' : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+  }
+
+  // ---------- Almacenamiento persistente (cola offline) ----------
+  // Usa localStorage del navegador: persiste en este dispositivo/navegador
+  // entre sesiones, sin necesidad de conexión a internet.
+  const STORAGE_KEY = 'salfa_checklists_pending';
+
+  async function getQueue(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(err){
+      console.error('Error al leer almacenamiento local:', err);
+      return [];
+    }
+  }
+
+  async function setQueue(queue){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(queue));
+      return true;
+    }catch(err){
+      console.error('Error al guardar en almacenamiento local:', err);
+      return false;
+    }
+  }
+
+  async function updatePendingCount(){
+    const queue = await getQueue();
+    document.getElementById('pending-count').textContent = queue.length;
+  }
+
+  async function saveChecklist(e){
+    e.preventDefault();
+
+    if(!checkValues.item1 || !checkValues.item2 || !checkValues.item3){
+      showToast('Responde los 3 puntos de control antes de guardar.', true);
+      return;
+    }
+    if(!signed){
+      showToast('Falta la firma del supervisor / prevencionista.', true);
+      return;
+    }
+
+    const submitBtn = document.getElementById('submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Guardando…';
+
+    const record = {
+      id: 'CHK-' + Date.now(),
+      timestamp: new Date().toISOString(),
+      rut: document.getElementById('rut').value,
+      area: document.getElementById('area').value,
+      items: { ...checkValues },
+      signature: canvas.toDataURL(),
+      synced: false
+    };
+
+    const queue = await getQueue();
+    queue.push(record);
+    const ok = await setQueue(queue);
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Guardar inspección';
+
+    if(ok){
+      showToast('✅ Inspección guardada en el dispositivo.');
+      document.getElementById('checklist-form').reset();
+      clearSignature();
+      Object.keys(checkValues).forEach(k=>delete checkValues[k]);
+      document.querySelectorAll('.seg button').forEach(b=>b.classList.remove('sel-ok','sel-bad','sel-na'));
+      updatePendingCount();
+    } else {
+      showToast('No se pudo guardar. Intenta nuevamente.', true);
+    }
+  }
+
+  async function syncData(){
+    const queue = await getQueue();
+    if(queue.length === 0){
+      showToast('No hay registros pendientes por sincronizar.');
+      return;
+    }
+    if(!navigator.onLine){
+      showToast('⚠️ Sin conexión a internet. Conéctate para sincronizar.', true);
+      return;
+    }
+
+    const btn = document.getElementById('sync-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sincronizando…';
+
+    // Simulación de envío a API backend de Salfa
+    setTimeout(async ()=>{
+      const ok = await setQueue([]);
+      btn.disabled = false;
+      btn.textContent = 'Sincronizar';
+      if(ok){
+        showToast(`🚀 Sincronización exitosa: ${queue.length} registro(s) subidos.`);
+        updatePendingCount();
+      } else {
+        showToast('Error al limpiar la cola local tras sincronizar.', true);
+      }
+    }, 900);
+  }
+
+  updatePendingCount();
+</script>
+</body>
+</html>
