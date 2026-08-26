@@ -9,26 +9,28 @@
 <style>
   :root{
     --bg:#12161A; --surface:#1B2127; --surface-2:#242C33; --line:#323C45;
-    --amber:#F5B400; --text:#EDEFF2; --text-dim:#8C97A3; --text-faint:#5C6773;
+    --brand:#C1272D; --brand-gray:#9B9D9E; --text:#EDEFF2; --text-dim:#8C97A3; --text-faint:#5C6773;
   }
   *{box-sizing:border-box;}
   body{
-    margin:0; background:radial-gradient(1100px 500px at 15% -10%, rgba(245,180,0,0.07), transparent 60%), var(--bg);
+    margin:0; background:radial-gradient(1100px 500px at 15% -10%, rgba(193,39,45,0.09), transparent 60%), var(--bg);
     color:var(--text); font-family:'Inter',sans-serif; min-height:100vh;
     display:flex; align-items:center; justify-content:center; padding:24px;
   }
   .wrap{max-width:480px;width:100%;}
   .brand{display:flex;align-items:center;gap:12px;margin-bottom:36px;}
-  .brand-mark{width:38px;height:38px;border-radius:7px;background:repeating-linear-gradient(45deg, var(--amber), var(--amber) 6px, #1a1a1a 6px, #1a1a1a 12px);position:relative;}
+  .brand-mark{width:38px;height:38px;border-radius:7px;background:repeating-linear-gradient(45deg, var(--brand), var(--brand) 6px, #1a1a1a 6px, #1a1a1a 12px);position:relative;}
   .brand-mark::after{content:"";position:absolute;inset:5px;background:var(--bg);border-radius:4px;}
-  .brand h1{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;font-size:22px;font-weight:800;margin:0;letter-spacing:0.02em;}
+  .brand h1{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;font-size:22px;font-weight:800;margin:0;letter-spacing:0.01em;}
+  .brand h1 .n-salfa{color:var(--brand);}
+  .brand h1 .n-montajes{color:var(--brand-gray);}
   .brand p{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-faint);letter-spacing:0.12em;text-transform:uppercase;margin:2px 0 0;}
   a.card{
     display:block;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
     padding:20px;margin-bottom:14px;text-decoration:none;color:var(--text);transition:border-color .15s, transform .1s;
   }
-  a.card:hover{border-color:var(--amber);transform:translateY(-1px);}
-  a.card .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--amber);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:6px;}
+  a.card:hover{border-color:var(--brand);transform:translateY(-1px);}
+  a.card .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--brand);letter-spacing:0.14em;text-transform:uppercase;margin-bottom:6px;}
   a.card h2{font-family:'Barlow Condensed',sans-serif;text-transform:uppercase;font-size:19px;font-weight:700;margin:0 0 4px;letter-spacing:0.02em;}
   a.card p{font-size:12.5px;color:var(--text-dim);margin:0;line-height:1.4;}
 </style>
@@ -38,8 +40,8 @@
     <div class="brand">
       <div class="brand-mark"></div>
       <div>
-        <h1>Salfa · Prevención</h1>
-        <p>Suite de apps operacionales</p>
+        <h1><span class="n-salfa">SALFA</span><span class="n-montajes">MONTAJES</span></h1>
+        <p>Suite de apps de prevención</p>
       </div>
     </div>
 

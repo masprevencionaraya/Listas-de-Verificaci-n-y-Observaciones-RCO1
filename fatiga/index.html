@@ -12,10 +12,10 @@
     --surface:#1B2127;
     --surface-2:#242C33;
     --line:#323C45;
-    --amber:#F5B400;
-    --amber-dim:#8a6600;
-    --orange:#FF6A3D;
-    --danger:#E5453D;
+    --brand:#C1272D;
+    --brand-gray:#9B9D9E;
+    --caution:#F0A400;
+    --danger:#C1272D;
     --safe:#2FB57D;
     --text:#EDEFF2;
     --text-dim:#8C97A3;
@@ -25,7 +25,7 @@
   html,body{margin:0;padding:0;}
   body{
     background:
-      radial-gradient(1100px 500px at 15% -10%, rgba(245,180,0,0.07), transparent 60%),
+      radial-gradient(1100px 500px at 15% -10%, rgba(193,39,45,0.09), transparent 60%),
       var(--bg);
     color:var(--text);
     font-family:'Inter',sans-serif;
@@ -54,7 +54,7 @@
   .brand{display:flex;align-items:center;gap:10px;}
   .brand-mark{
     width:34px;height:34px;border-radius:6px;
-    background:repeating-linear-gradient(45deg, var(--amber), var(--amber) 6px, #1a1a1a 6px, #1a1a1a 12px);
+    background:repeating-linear-gradient(45deg, var(--brand), var(--brand) 6px, #1a1a1a 6px, #1a1a1a 12px);
     position:relative;flex-shrink:0;
   }
   .brand-mark::after{
@@ -62,13 +62,15 @@
     display:flex;
   }
   .brand-text{line-height:1;}
-  .brand-text .name{font-size:19px;font-weight:800;color:var(--text);letter-spacing:0.03em;}
+  .brand-text .name{font-size:19px;font-weight:800;letter-spacing:0.01em;}
+  .brand-text .name .n-salfa{color:var(--brand);}
+  .brand-text .name .n-montajes{color:var(--brand-gray);}
   .brand-text .sub{font-size:9.5px;color:var(--text-faint);letter-spacing:0.14em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;margin-top:2px;}
 
   .clock-chip{
     text-align:right;font-family:'IBM Plex Mono',monospace;
   }
-  .clock-chip .t{font-size:14px;color:var(--amber);font-weight:600;}
+  .clock-chip .t{font-size:14px;color:var(--brand);font-weight:600;}
   .clock-chip .d{font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:0.08em;}
 
   /* ===== Tab nav ===== */
@@ -78,7 +80,7 @@
     font-family:'Barlow Condensed',sans-serif;font-size:14px;letter-spacing:0.06em;text-transform:uppercase;font-weight:600;
     cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;
   }
-  .tabnav button.active{color:var(--amber);border-bottom-color:var(--amber);}
+  .tabnav button.active{color:var(--brand);border-bottom-color:var(--brand);}
   .tabnav button:not(.active):hover{color:var(--text-dim);}
 
   main{flex:1;padding:20px 18px 32px;}
@@ -91,10 +93,10 @@
     padding:18px;
   }
   .eyebrow{
-    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--amber);
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--brand);
     letter-spacing:0.16em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:8px;
   }
-  .eyebrow::before{content:"";width:16px;height:2px;background:var(--amber);display:inline-block;}
+  .eyebrow::before{content:"";width:16px;height:2px;background:var(--brand);display:inline-block;}
 
   label.field-label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:6px;font-weight:500;letter-spacing:0.02em;}
   input[type=text],input[type=number],select{
@@ -102,7 +104,7 @@
     padding:12px 12px;border-radius:7px;font-size:15px;font-family:'IBM Plex Mono',monospace;
     outline:none;transition:border-color .15s, box-shadow .15s;
   }
-  input:focus,select:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(245,180,0,0.15);}
+  input:focus,select:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(193,39,45,0.15);}
   select{font-family:'Inter',sans-serif;appearance:none;background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M0 0l5 6 5-6z" fill="%238C97A3"/></svg>');background-repeat:no-repeat;background-position:right 14px center;padding-right:32px;}
   .field-gap{margin-bottom:16px;}
 
@@ -112,16 +114,16 @@
   }
   .energy-opt .ic{font-size:20px;display:block;margin-bottom:4px;}
   .energy-opt .lb{font-size:10.5px;color:var(--text-faint);line-height:1.2;}
-  .energy-opt.sel{border-color:var(--amber);background:rgba(245,180,0,0.08);}
-  .energy-opt.sel .lb{color:var(--amber);}
+  .energy-opt.sel{border-color:var(--brand);background:rgba(193,39,45,0.08);}
+  .energy-opt.sel .lb{color:var(--brand);}
 
   .btn-primary{
     width:100%;padding:15px;border:none;border-radius:8px;cursor:pointer;
-    background:var(--amber);color:#1a1400;font-weight:700;font-size:14px;
+    background:var(--brand);color:#FFF6F5;font-weight:700;font-size:14px;
     font-family:'Barlow Condensed',sans-serif;letter-spacing:0.08em;text-transform:uppercase;
     transition:transform .1s, background .15s;
   }
-  .btn-primary:hover{background:#ffc61a;}
+  .btn-primary:hover{background:#A81F25;}
   .btn-primary:active{transform:scale(0.98);}
   .btn-primary:disabled{background:var(--line);color:var(--text-faint);cursor:not-allowed;}
   .btn-ghost{
@@ -186,8 +188,8 @@
     <div class="brand">
       <div class="brand-mark"></div>
       <div class="brand-text">
-        <div class="name">TURNO·SEGURO</div>
-        <div class="sub">Control operacional de fatiga</div>
+        <div class="name"><span class="n-salfa">SALFA</span><span class="n-montajes">MONTAJES</span></div>
+        <div class="sub">Turno·Seguro · Control de fatiga</div>
       </div>
     </div>
     <div class="clock-chip">
@@ -388,7 +390,7 @@
       risk='alto'; color='var(--danger)'; score = 88;
       title = '🔴 Alto riesgo'; note = 'No apto para operar. Se notifica a supervisor de turno.';
     } else if(isMediumRisk){
-      risk='moderado'; color='var(--amber)'; score = 52;
+      risk='moderado'; color='var(--caution)'; score = 52;
       title = '🟡 Riesgo moderado'; note = 'Apto con precaución. Se sugiere pausa activa antes de iniciar.';
     } else {
       risk='apto'; color='var(--safe)'; score = 15;
@@ -425,7 +427,7 @@
   }
 
   function riskColor(risk){
-    return risk==='alto' ? 'var(--danger)' : risk==='moderado' ? 'var(--amber)' : 'var(--safe)';
+    return risk==='alto' ? 'var(--danger)' : risk==='moderado' ? 'var(--caution)' : 'var(--safe)';
   }
   function riskLabel(risk){
     return risk==='alto' ? 'Alto riesgo' : risk==='moderado' ? 'Moderado' : 'Apto';
