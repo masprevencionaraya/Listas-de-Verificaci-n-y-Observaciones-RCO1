@@ -28,7 +28,7 @@
  * para que los cambios queden activos en la URL ya publicada.
  */
 
-const FOLDER_ID = '1_X-LkjOI8bzNCDqElla-WfTljo_4B6I3';
+const FOLDER_ID = '1kBdLsalEch9fqmYJ360pjkP3G6uVAyXB';
 const SHARED_SECRET = '0ecca3d7af4b241d1453e171c313b8485cc7423b';
 
 function doPost(e) {
