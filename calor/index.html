@@ -371,6 +371,8 @@
 <div class="toast" id="toast"></div>
 <div id="print-report" class="print-only"></div>
 
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="vendor/jspdf.plugin.autotable.min.js"></script>
 <script>
   // ---------- Estado de red ----------
   function updateOnlineStatus(){
@@ -793,7 +795,7 @@
 
   async function updatePendingCount(){
     const queue = await getQueue();
-    document.getElementById('pending-count').textContent = queue.length;
+    document.getElementById('pending-count').textContent = queue.filter(r => !r.synced).length;
   }
 
   async function guardarBitacora(e){
@@ -851,6 +853,7 @@
     if(ok){
       showToast('✅ Bitácora guardada en el dispositivo.');
       updatePendingCount();
+      attemptAutoUpload(record.id);
     } else {
       showToast('No se pudo guardar. Intenta nuevamente.', true);
     }
@@ -858,7 +861,9 @@
 
   async function syncData(){
     const queue = await getQueue();
-    if(queue.length === 0){
+    const pending = queue.filter(r => !r.synced);
+
+    if(pending.length === 0){
       showToast('No hay bitácoras pendientes por sincronizar.');
       return;
     }
@@ -866,25 +871,206 @@
       showToast('⚠️ Sin conexión a internet. Conéctate para sincronizar.', true);
       return;
     }
+    if(!DRIVE_UPLOAD_URL){
+      showToast('⚠️ La subida automática a Drive aún no está configurada.', true);
+      return;
+    }
 
     const btn = document.getElementById('sync-btn');
     btn.disabled = true;
     btn.textContent = 'Sincronizando…';
 
-    setTimeout(async ()=>{
-      const ok = await setQueue([]);
-      btn.disabled = false;
-      btn.textContent = 'Sincronizar';
-      if(ok){
-        showToast(`🚀 Sincronización exitosa: ${queue.length} bitácora(s) subida(s).`);
-        updatePendingCount();
-      } else {
-        showToast('Error al limpiar la cola local tras sincronizar.', true);
-      }
-    }, 900);
+    let success = 0, failed = 0;
+    for(const record of pending){
+      const result = await uploadRecordToDrive(record);
+      if(result && result.ok){ record.synced = true; success++; }
+      else { failed++; }
+    }
+    await setQueue(queue.filter(r => !r.synced));
+
+    btn.disabled = false;
+    btn.textContent = 'Sincronizar';
+    updatePendingCount();
+
+    if(failed === 0){
+      showToast(`🚀 ${success} bitácora(s) subida(s) a Drive.`);
+    } else {
+      showToast(`⚠️ ${success} subida(s), ${failed} con error. Se reintentarán luego.`, success === 0);
+    }
   }
 
   updatePendingCount();
+
+  // ---------- Subida automática a Google Drive ----------
+  // Requiere desplegar el Apps Script receptor (ver README) y pegar aquí su URL.
+  const DRIVE_UPLOAD_URL = ''; // Ej: 'https://script.google.com/macros/s/AKfycb.../exec'
+  const DRIVE_SHARED_SECRET = '0ecca3d7af4b241d1453e171c313b8485cc7423b';
+
+  if(window.jspdf && window.jspdf.jsPDF && window.applyPlugin){
+    window.applyPlugin(window.jspdf.jsPDF);
+  }
+
+  function buildReportPdf(record){
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const marginX = 14;
+    let y = 16;
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(26, 26, 26);
+    doc.text('SALFA MONTAJES', marginX, y);
+    y += 5;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100, 100, 100);
+    doc.text('BITÁCORA · EXPOSICIÓN OCUPACIONAL A CALOR · D.S. 594 ART. 96-98 BIS', marginX, y);
+    y += 3;
+    doc.setDrawColor(193, 39, 45); doc.setLineWidth(0.8);
+    doc.line(marginX, y, 196, y);
+    y += 8;
+
+    const metaRows = [
+      ['EMPRESA', record.empresa || '—', 'FAENA / PROYECTO', record.proyecto || '—'],
+      ['ÁREA / PUESTO EVALUADO', record.area || '—', 'EVALUADOR', record.evaluador || '—'],
+      ['FECHA / HORA', record.fechaHora || '—', 'GENERADO', new Date(record.timestamp).toLocaleString('es-CL')]
+    ];
+    metaRows.forEach(([l1, v1, l2, v2]) => {
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(120, 120, 120);
+      doc.text(l1, marginX, y); doc.text(l2, 105, y);
+      y += 4.2;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(26, 26, 26);
+      doc.text(String(v1), marginX, y); doc.text(String(v2), 105, y);
+      y += 5.5;
+    });
+    y += 2;
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(26, 26, 26);
+    doc.text('Paso 1 · Tramos de trabajo y descanso', marginX, y);
+    y += 3;
+
+    doc.autoTable({
+      startY: y,
+      margin: { left: marginX, right: marginX },
+      styles: { fontSize: 8, cellPadding: 2, textColor: [26, 26, 26] },
+      headStyles: { fillColor: [242, 242, 242], textColor: [26, 26, 26] },
+      head: [['#', 'Tipo', 'Descripción', 'Situación', 'TBH', 'TG', 'TBS', 'Tiempo', 'Actividad (M)', 'TGBH']],
+      body: record.tramos.map((t, i) => [
+        i + 1,
+        t.tipo === 'trabajo' ? 'Trabajo' : 'Descanso',
+        t.descripcion || '—',
+        t.situacion === 'solar' ? 'Con carga solar' : 'Sin carga solar / bajo techo',
+        t.tbh ?? '—', t.tg ?? '—',
+        t.situacion === 'solar' ? (t.tbs ?? '—') : '—',
+        (t.tiempoHoras ?? '—') + ' h',
+        `${t.actividad}\n${t.m ?? '—'} Kcal/h`,
+        (t.tgbh != null ? t.tgbh.toFixed(1) : '—') + ' °C'
+      ])
+    });
+    y = doc.lastAutoTable.finalY + 8;
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(26, 26, 26);
+    doc.text('Paso 2 · Resultados ponderados', marginX, y);
+    y += 3;
+
+    const r = record.resultado;
+    doc.autoTable({
+      startY: y,
+      margin: { left: marginX, right: marginX },
+      theme: 'grid',
+      styles: { fontSize: 9, cellPadding: 2.4, textColor: [26, 26, 26] },
+      body: [
+        ['TGBH ponderado (Art. 97)', r.tgbhProm.toFixed(1) + ' °C', 'M ponderado (Art. 98)', r.mProm.toFixed(0) + ' Kcal/h'],
+        ['Carga de trabajo', r.categoria, 'Régimen determinado', r.regimenLabel],
+        ['Límite permisible (D.S. 594)', r.limite.toFixed(1) + ' °C', '', '']
+      ]
+    });
+    y = doc.lastAutoTable.finalY + 6;
+
+    const cumple = r.cumple;
+    const fillColor = cumple ? [234, 250, 241] : [253, 236, 236];
+    const drawColor = cumple ? [26, 122, 76] : [168, 31, 37];
+    doc.setFillColor(fillColor[0], fillColor[1], fillColor[2]);
+    doc.setDrawColor(drawColor[0], drawColor[1], drawColor[2]);
+    doc.roundedRect(marginX, y, 182, 10, 2, 2, 'FD');
+    doc.setTextColor(drawColor[0], drawColor[1], drawColor[2]);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+    doc.text(
+      cumple ? 'CUMPLE — dentro del límite permisible' : 'NO CUMPLE — excede el límite permisible',
+      marginX + 91, y + 6.5, { align: 'center' }
+    );
+    doc.setTextColor(26, 26, 26);
+    y += 18;
+
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+    doc.text('Paso 3 · Gestión de altas temperaturas (Art. 98 bis)', marginX, y);
+    y += 3;
+
+    doc.autoTable({
+      startY: y,
+      margin: { left: marginX, right: marginX },
+      styles: { fontSize: 7.5, cellPadding: 2, textColor: [26, 26, 26] },
+      headStyles: { fillColor: [242, 242, 242], textColor: [26, 26, 26] },
+      columnStyles: { 0: { cellWidth: 8 } },
+      head: [['', 'Acción', 'Resultado', 'Comentario']],
+      body: record.art98bis.map((a, i) => [String.fromCharCode(97 + i) + ')', a.item, a.valor, a.comentario || '—'])
+    });
+    y = doc.lastAutoTable.finalY + 10;
+
+    if(y > 250){ doc.addPage(); y = 20; }
+
+    if(record.signature){
+      try { doc.addImage(record.signature, 'PNG', marginX, y, 55, 20); } catch(e){}
+      doc.setDrawColor(150, 150, 150); doc.setLineWidth(0.2);
+      doc.line(marginX, y + 22, marginX + 55, y + 22);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(120, 120, 120);
+      doc.text('Firma del evaluador', marginX, y + 26);
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(26, 26, 26);
+      doc.text(record.evaluador || '—', marginX + 62, y + 16);
+      doc.setFont('helvetica', 'normal');
+      doc.text(record.fechaHora || '—', marginX + 62, y + 21);
+    }
+
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(150, 150, 150);
+    doc.text('Documento generado por la Bitácora de Exposición a Calor — Suite de Prevención Salfa Montajes.', marginX, 289);
+
+    return doc;
+  }
+
+  async function uploadRecordToDrive(record){
+    if(!DRIVE_UPLOAD_URL) return { ok: false, error: 'not_configured' };
+    try{
+      const doc = buildReportPdf(record);
+      const dataUri = doc.output('datauristring');
+      const base64 = dataUri.split(',').pop();
+      const safeEmpresa = (record.empresa || 'SF').replace(/[^\w-]+/g, '_');
+      const res = await fetch(DRIVE_UPLOAD_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          secret: DRIVE_SHARED_SECRET,
+          filename: `Bitacora-Calor_${safeEmpresa}_${record.id}.pdf`,
+          pdfBase64: base64
+        })
+      });
+      return await res.json();
+    }catch(err){
+      console.error('Error al subir a Drive:', err);
+      return { ok: false, error: String(err) };
+    }
+  }
+
+  async function attemptAutoUpload(recordId){
+    if(!DRIVE_UPLOAD_URL || !navigator.onLine) return;
+    const queue = await getQueue();
+    const record = queue.find(r => r.id === recordId);
+    if(!record || record.synced) return;
+
+    const result = await uploadRecordToDrive(record);
+    if(result && result.ok){
+      const remaining = queue.filter(r => r.id !== recordId);
+      await setQueue(remaining);
+      updatePendingCount();
+      showToast('☁️ Informe subido automáticamente a Drive.');
+    }
+    // Si falla, la bitácora queda en la cola local para reintentar con "Sincronizar".
+  }
 
   // ---------- Informe imprimible (PDF) ----------
   function escapeHtml(str){
