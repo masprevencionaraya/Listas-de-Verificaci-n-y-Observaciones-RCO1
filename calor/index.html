@@ -1040,8 +1040,9 @@
       const dataUri = doc.output('datauristring');
       const base64 = dataUri.split(',').pop();
       const safeEmpresa = (record.empresa || 'SF').replace(/[^\w-]+/g, '_');
-      const res = await fetch(DRIVE_UPLOAD_URL, {
+      await fetch(DRIVE_UPLOAD_URL, {
         method: 'POST',
+        mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           secret: DRIVE_SHARED_SECRET,
@@ -1049,7 +1050,11 @@
           pdfBase64: base64
         })
       });
-      return await res.json();
+      // Apps Script no expone cabeceras CORS en su respuesta, así que en modo
+      // 'no-cors' el navegador no deja leerla (queda "opaca"). Si el fetch no
+      // lanzó una excepción, la solicitud sí llegó al servidor: lo damos por
+      // subido, aunque no podamos confirmar el resultado exacto desde aquí.
+      return { ok: true };
     }catch(err){
       console.error('Error al subir a Drive:', err);
       return { ok: false, error: String(err) };
