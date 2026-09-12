@@ -197,6 +197,45 @@
 
   .back-link{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--text-faint);text-decoration:none;margin-bottom:12px;}
   .back-link:hover{color:var(--brand);}
+
+  .btn-secondary{
+    width:100%;padding:13px;border:1px solid var(--line);border-radius:8px;cursor:pointer;margin-top:10px;
+    background:var(--surface);color:var(--text-dim);font-weight:700;font-size:13px;
+    font-family:'Barlow Condensed',sans-serif;letter-spacing:0.06em;text-transform:uppercase;
+    transition:border-color .15s, color .15s;
+  }
+  .btn-secondary:hover{border-color:var(--brand);color:var(--brand);}
+
+  /* ===== Informe imprimible (PDF) ===== */
+  .print-only{display:none;}
+  @media print{
+    body{background:#fff !important;}
+    body > *:not(#print-report){display:none !important;}
+    #print-report{display:block !important;}
+    @page{margin:14mm;}
+  }
+  #print-report{
+    background:#fff;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:12px;line-height:1.5;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  #print-report h3{font-family:'Barlow Condensed',sans-serif;font-size:14px;margin:18px 0 8px;color:#1a1a1a;}
+  #print-report .pr-header{display:flex;align-items:center;gap:12px;border-bottom:3px solid #C1272D;padding-bottom:12px;margin-bottom:16px;}
+  #print-report .pr-mark{width:40px;height:40px;border-radius:6px;background:repeating-linear-gradient(45deg,#C1272D,#C1272D 6px,#1a1a1a 6px,#1a1a1a 12px);position:relative;flex-shrink:0;}
+  #print-report .pr-mark::after{content:"";position:absolute;inset:5px;background:#fff;border-radius:3px;}
+  #print-report .pr-title h1{font-family:'Barlow Condensed',sans-serif;font-size:20px;margin:0;text-transform:uppercase;}
+  #print-report .pr-title .sub{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.06em;font-family:'IBM Plex Mono',monospace;}
+  #print-report .pr-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;margin-bottom:10px;font-size:11.5px;}
+  #print-report .pr-meta div b{display:block;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;margin-bottom:2px;}
+  #print-report table{width:100%;border-collapse:collapse;margin-bottom:10px;font-size:10.5px;}
+  #print-report th,#print-report td{border:1px solid #ccc;padding:5px 7px;text-align:left;vertical-align:top;}
+  #print-report th{background:#f2f2f2;font-size:9.5px;text-transform:uppercase;letter-spacing:0.02em;}
+  #print-report tr{page-break-inside:avoid;}
+  #print-report .pr-verdict{border:2px solid #1a1a1a;border-radius:6px;padding:10px 14px;font-weight:700;margin:12px 0;text-align:center;}
+  #print-report .pr-verdict.ok{border-color:#1a7a4c;color:#1a7a4c;background:#eafaf1;}
+  #print-report .pr-verdict.bad{border-color:#a81f25;color:#a81f25;background:#fdecec;}
+  #print-report .pr-sig{margin-top:20px;display:flex;gap:24px;align-items:flex-end;}
+  #print-report .pr-sig img{height:70px;border-bottom:1px solid #333;}
+  #print-report .pr-footer{margin-top:20px;font-size:9.5px;color:#999;border-top:1px solid #ddd;padding-top:8px;}
 </style>
 </head>
 <body>
@@ -322,6 +361,7 @@
         </div>
 
         <button type="submit" class="btn-primary" id="submit-btn">Guardar bitácora</button>
+        <button type="button" class="btn-secondary" id="pdf-btn" onclick="descargarInformePDF()">📄 Descargar informe (PDF)</button>
       </form>
     </div>
 
@@ -329,6 +369,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div id="print-report" class="print-only"></div>
 
 <script>
   // ---------- Estado de red ----------
@@ -844,6 +885,121 @@
   }
 
   updatePendingCount();
+
+  // ---------- Informe imprimible (PDF) ----------
+  function escapeHtml(str){
+    return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function buildPrintReport(){
+    const empresa = document.getElementById('empresa').value;
+    const proyecto = document.getElementById('proyecto').value;
+    const area = document.getElementById('area').value;
+    const evaluador = document.getElementById('evaluador').value;
+    const fechaHora = document.getElementById('fecha-hora').value;
+
+    const tramosRows = tramos.map((t, i) => {
+      const tgbh = tgbhForTramo(t);
+      return `<tr>
+        <td>${i + 1}</td>
+        <td>${t.tipo === 'trabajo' ? 'Trabajo' : 'Descanso'}</td>
+        <td>${escapeHtml(t.desc) || '—'}</td>
+        <td>${t.situacion === 'solar' ? 'Con carga solar' : 'Sin carga solar / bajo techo'}</td>
+        <td>${t.tbh ?? '—'}</td>
+        <td>${t.tg ?? '—'}</td>
+        <td>${t.situacion === 'solar' ? (t.tbs ?? '—') : '—'}</td>
+        <td>${t.tiempo ?? '—'} h</td>
+        <td>${escapeHtml(t.actividad)}<br>${t.m ?? '—'} Kcal/h</td>
+        <td>${isFinite(tgbh) ? tgbh.toFixed(1) + ' °C' : '—'}</td>
+      </tr>`;
+    }).join('');
+
+    const bisRows = ART98BIS.map((text, idx) => `
+      <tr>
+        <td>${String.fromCharCode(97 + idx)})</td>
+        <td>${escapeHtml(text)}</td>
+        <td style="text-align:center;font-weight:700;">${checkValues98bis[idx] || '—'}</td>
+        <td>${escapeHtml(comments98bis[idx]) || '—'}</td>
+      </tr>`).join('');
+
+    const r = lastResult;
+    const verdictClass = r.cumple ? 'ok' : 'bad';
+    const verdictText = r.cumple
+      ? '✅ CUMPLE — dentro del límite permisible'
+      : '⛔ NO CUMPLE — excede el límite permisible, adoptar medidas de control';
+
+    document.getElementById('print-report').innerHTML = `
+      <div class="pr-header">
+        <div class="pr-mark"></div>
+        <div class="pr-title">
+          <h1>Salfa Montajes</h1>
+          <div class="sub">Bitácora · Exposición Ocupacional a Calor · D.S. 594 Art. 96–98 bis</div>
+        </div>
+      </div>
+      <div class="pr-meta">
+        <div><b>Empresa</b>${escapeHtml(empresa) || '—'}</div>
+        <div><b>Faena / proyecto</b>${escapeHtml(proyecto) || '—'}</div>
+        <div><b>Área / puesto evaluado</b>${escapeHtml(area) || '—'}</div>
+        <div><b>Evaluador</b>${escapeHtml(evaluador) || '—'}</div>
+        <div><b>Fecha / hora</b>${escapeHtml(fechaHora) || '—'}</div>
+        <div><b>Generado</b>${new Date().toLocaleString('es-CL')}</div>
+      </div>
+
+      <h3>Paso 1 · Tramos de trabajo y descanso</h3>
+      <table>
+        <thead><tr><th>#</th><th>Tipo</th><th>Descripción</th><th>Situación</th><th>TBH</th><th>TG</th><th>TBS</th><th>Tiempo</th><th>Actividad (M)</th><th>TGBH</th></tr></thead>
+        <tbody>${tramosRows}</tbody>
+      </table>
+
+      <h3>Paso 2 · Resultados ponderados</h3>
+      <table>
+        <tbody>
+          <tr><td><b>TGBH ponderado (Art. 97)</b></td><td>${r.tgbhProm.toFixed(1)} °C</td>
+              <td><b>M ponderado (Art. 98)</b></td><td>${r.mProm.toFixed(0)} Kcal/h</td></tr>
+          <tr><td><b>Carga de trabajo</b></td><td>${r.categoria}</td>
+              <td><b>Régimen determinado</b></td><td>${r.regimenLabel}</td></tr>
+          <tr><td><b>Límite permisible (tabla D.S. 594)</b></td><td colspan="3">${r.limite.toFixed(1)} °C</td></tr>
+        </tbody>
+      </table>
+      <div class="pr-verdict ${verdictClass}">${verdictText}</div>
+
+      <h3>Paso 3 · Gestión de altas temperaturas (Art. 98 bis)</h3>
+      <table>
+        <thead><tr><th style="width:24px;"></th><th>Acción</th><th style="width:60px;">Resultado</th><th>Comentario</th></tr></thead>
+        <tbody>${bisRows}</tbody>
+      </table>
+
+      <div class="pr-sig">
+        <div>
+          <img src="${canvas.toDataURL('image/png')}" alt="Firma">
+          <div style="font-size:10px;color:#888;margin-top:2px;">Firma del evaluador</div>
+        </div>
+        <div style="font-size:11px;">
+          <div><b>${escapeHtml(evaluador) || '—'}</b></div>
+          <div>${escapeHtml(fechaHora) || '—'}</div>
+        </div>
+      </div>
+
+      <div class="pr-footer">Documento generado por la Bitácora de Exposición a Calor — Suite de Prevención Salfa Montajes.</div>
+    `;
+  }
+
+  function descargarInformePDF(){
+    if(tramos.length === 0 || !lastResult){
+      showToast('Completa los tramos (TBH, TG/TBS, tiempo y actividad) antes de generar el informe.', true);
+      return;
+    }
+    if(!allAnswered(checkValues98bis, ART98BIS.length)){
+      showToast('Responde todos los puntos de gestión de altas temperaturas (Art. 98 bis).', true);
+      return;
+    }
+    if(!signed){
+      showToast('Falta la firma del evaluador.', true);
+      return;
+    }
+    buildPrintReport();
+    window.print();
+  }
 </script>
 </body>
 </html>

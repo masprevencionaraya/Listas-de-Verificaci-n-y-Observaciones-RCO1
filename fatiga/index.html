@@ -185,6 +185,32 @@
   .stat .l{font-size:9px;color:var(--text-faint);letter-spacing:0.06em;text-transform:uppercase;margin-top:2px;}
 
   .hidden{display:none !important;}
+
+  /* ===== Informe imprimible (PDF) ===== */
+  .print-only{display:none;}
+  @media print{
+    body{background:#fff !important;}
+    body > *:not(#print-report){display:none !important;}
+    #print-report{display:block !important;}
+    @page{margin:14mm;}
+  }
+  #print-report{
+    background:#fff;color:#1a1a1a;font-family:'Inter',sans-serif;font-size:12px;line-height:1.5;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;
+  }
+  #print-report h3{font-family:'Barlow Condensed',sans-serif;font-size:14px;margin:18px 0 8px;color:#1a1a1a;}
+  #print-report .pr-header{display:flex;align-items:center;gap:12px;border-bottom:3px solid #C1272D;padding-bottom:12px;margin-bottom:16px;}
+  #print-report .pr-mark{width:40px;height:40px;border-radius:6px;background:repeating-linear-gradient(45deg,#C1272D,#C1272D 6px,#1a1a1a 6px,#1a1a1a 12px);position:relative;flex-shrink:0;}
+  #print-report .pr-mark::after{content:"";position:absolute;inset:5px;background:#fff;border-radius:3px;}
+  #print-report .pr-title h1{font-family:'Barlow Condensed',sans-serif;font-size:20px;margin:0;text-transform:uppercase;}
+  #print-report .pr-title .sub{font-size:10px;color:#666;text-transform:uppercase;letter-spacing:0.06em;font-family:'IBM Plex Mono',monospace;}
+  #print-report .pr-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;margin-bottom:10px;font-size:11.5px;}
+  #print-report .pr-meta div b{display:block;font-size:9.5px;color:#888;text-transform:uppercase;letter-spacing:0.04em;font-weight:600;margin-bottom:2px;}
+  #print-report .pr-verdict{border:2px solid #1a1a1a;border-radius:6px;padding:12px 16px;font-weight:700;margin:14px 0;text-align:center;}
+  #print-report .pr-verdict.ok{border-color:#1a7a4c;color:#1a7a4c;background:#eafaf1;}
+  #print-report .pr-verdict.warn{border-color:#b57900;color:#b57900;background:#fff6e6;}
+  #print-report .pr-verdict.bad{border-color:#a81f25;color:#a81f25;background:#fdecec;}
+  #print-report .pr-footer{margin-top:20px;font-size:9.5px;color:#999;border-top:1px solid #ddd;padding-top:8px;}
 </style>
 </head>
 <body>
@@ -290,7 +316,8 @@
             </div>
           </div>
 
-          <div style="margin-top:18px;">
+          <div style="margin-top:18px;display:flex;flex-direction:column;gap:10px;">
+            <button class="btn-ghost" onclick="descargarInformePDF()">📄 Descargar informe (PDF)</button>
             <button class="btn-ghost" onclick="resetForm()">Realizar otra evaluación</button>
           </div>
         </div>
@@ -311,6 +338,8 @@
   </main>
 </div>
 
+<div id="print-report" class="print-only"></div>
+
 <script>
   // ---------- Reloj ----------
   function tickClock(){
@@ -323,6 +352,7 @@
   // ---------- Estado ----------
   let startTime = null, timer = null, reactionTime = 0, energyLevel = null;
   let history = []; // {id, hours, energy, reaction, risk, time}
+  let lastEval = null;
 
   function selectEnergy(val){
     energyLevel = val;
@@ -420,9 +450,11 @@
     const angle = -90 + (score/100)*180;
     needle.setAttribute('transform', `rotate(${angle} 110 115)`);
 
+    const evalTime = new Date();
     history.unshift({
-      id: operatorId, hours, energy, reaction: reactionTime, risk, time: new Date()
+      id: operatorId, hours, energy, reaction: reactionTime, risk, time: evalTime
     });
+    lastEval = { operatorId, hours, energy, reactionTime, risk, title, note, score, time: evalTime };
   }
 
   function resetForm(){
@@ -461,6 +493,51 @@
         <div class="hist-status" style="color:${riskColor(h.risk)};background:${riskColor(h.risk)}22;">${riskLabel(h.risk)}</div>
       </div>
     `).join('');
+  }
+
+  // ---------- Informe imprimible (PDF) ----------
+  function escapeHtml(str){
+    return String(str ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function energyLabel(e){
+    return e === 3 ? 'Alerta' : e === 2 ? 'Normal' : e === 1 ? 'Agotado' : '—';
+  }
+
+  function buildPrintReport(){
+    const e = lastEval;
+    const verdictClass = e.risk === 'alto' ? 'bad' : e.risk === 'moderado' ? 'warn' : 'ok';
+    document.getElementById('print-report').innerHTML = `
+      <div class="pr-header">
+        <div class="pr-mark"></div>
+        <div class="pr-title">
+          <h1>Salfa Montajes</h1>
+          <div class="sub">Turno·Seguro · Informe de autoevaluación de fatiga</div>
+        </div>
+      </div>
+      <div class="pr-meta">
+        <div><b>Operador / RUT</b>${escapeHtml(e.operatorId) || '—'}</div>
+        <div><b>Fecha / hora evaluación</b>${e.time.toLocaleString('es-CL')}</div>
+        <div><b>Horas dormidas</b>${e.hours} h</div>
+        <div><b>Nivel de energía percibido</b>${energyLabel(e.energy)}</div>
+        <div><b>Tiempo de reacción</b>${e.reactionTime} ms</div>
+        <div><b>Generado</b>${new Date().toLocaleString('es-CL')}</div>
+      </div>
+      <div class="pr-verdict ${verdictClass}">
+        ${escapeHtml(e.title)} — Índice de fatiga: ${e.score}/100<br>
+        <span style="font-weight:400;font-size:11px;">${escapeHtml(e.note)}</span>
+      </div>
+      <div class="pr-footer">Documento generado por Turno·Seguro — Suite de Prevención Salfa Montajes. Autoevaluación realizada en el dispositivo del operador.</div>
+    `;
+  }
+
+  function descargarInformePDF(){
+    if(!lastEval){
+      alert('Realiza una evaluación antes de descargar el informe.');
+      return;
+    }
+    buildPrintReport();
+    window.print();
   }
 </script>
 </body>
