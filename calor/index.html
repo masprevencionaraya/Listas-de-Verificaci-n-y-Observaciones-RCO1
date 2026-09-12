@@ -767,7 +767,7 @@
     t.textContent = msg;
     t.className = 'toast show' + (isErr ? ' err' : '');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(()=>t.classList.remove('show'), 2800);
+    toastTimer = setTimeout(()=>t.classList.remove('show'), isErr ? 7000 : 2800);
   }
 
   // ---------- Almacenamiento persistente (cola offline) ----------
@@ -880,11 +880,11 @@
     btn.disabled = true;
     btn.textContent = 'Sincronizando…';
 
-    let success = 0, failed = 0;
+    let success = 0, failed = 0, lastError = '';
     for(const record of pending){
       const result = await uploadRecordToDrive(record);
       if(result && result.ok){ record.synced = true; success++; }
-      else { failed++; }
+      else { failed++; lastError = (result && result.error) ? String(result.error) : 'error desconocido'; }
     }
     await setQueue(queue.filter(r => !r.synced));
 
@@ -895,7 +895,7 @@
     if(failed === 0){
       showToast(`🚀 ${success} bitácora(s) subida(s) a Drive.`);
     } else {
-      showToast(`⚠️ ${success} subida(s), ${failed} con error. Se reintentarán luego.`, success === 0);
+      showToast(`⚠️ ${success} subida(s), ${failed} con error: ${lastError}`, success === 0);
     }
   }
 
