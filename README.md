@@ -1,6 +1,6 @@
 # Salfa · Suite de Prevención
 
-Dos aplicaciones web independientes (sin backend, sin build step) para prevención de riesgos en terreno.
+Aplicaciones web independientes (sin backend, sin build step) y formatos de registro para prevención de riesgos en terreno.
 
 ## Estructura
 
@@ -9,8 +9,10 @@ salfa-prevencion/
 ├── index.html              # Página de inicio, enlaza a ambas apps
 ├── fatiga/
 │   └── index.html          # Turno·Seguro — control de fatiga y test de reacción
-└── checklist/
-    └── index.html          # HSE Montajes — checklist pre-uso con firma digital
+├── checklist/
+│   └── index.html          # HSE Montajes — checklist pre-uso con firma digital
+└── formatos/
+    └── CC-146-Registro-Verificacion-Segregacion-SUSPEL.xlsx   # Registro mensual de segregación SUSPEL
 ```
 
 ## Apps
@@ -22,6 +24,17 @@ Autoevaluación de fatiga antes de operar maquinaria: horas de sueño, nivel de 
 Checklist de inspección pre-uso de herramientas (RUT, área, 3 puntos de control) con firma digital en canvas. Guarda los registros en `localStorage` del navegador como cola offline, y simula sincronización a un backend cuando hay conexión.
 
 **Nota:** ambas apps son prototipos front-end. El checklist no envía datos a ningún servidor real — el botón "Sincronizar" simula el envío y vacía la cola local. Para producción real, hay que reemplazar esa simulación por una llamada a una API.
+
+### 🔴 CC-146 · Registro de segregación SUSPEL — `/formatos`
+Planilla Excel (`.xlsx`) para el **registro mensual de verificación de segregación de sustancias peligrosas (SUSPEL)** según la Tabla de Incompatibilidades Químicas (clases 1 a 9), con registro fotográfico. Hojas del libro:
+
+- **Portada**: código del documento (CC-146), leyenda de colores e instrucciones de uso.
+- **Tabla Incompatibilidad**: matriz de referencia de las 14 clases de riesgo, coloreada igual que la tabla de incompatibilidad (rojo = peligro / amarillo = precaución / verde = sin incompatibilidad).
+- **Registro CC-146**: formulario mensual — datos generales, verificación de segregación por par de clases presentes en la bodega (el nivel de riesgo se calcula automáticamente con una fórmula `INDEX/MATCH` contra la Tabla Incompatibilidad), condiciones generales de segregación y firmas.
+- **Registro Fotográfico**: bloques para pegar la evidencia fotográfica mensual (mínimo 1 fotografía por verificación).
+- **Seguimiento Mensual**: control de cumplimiento del registro mes a mes (Enero a Diciembre).
+
+Las celdas con fondo ámbar son las que se deben completar cada mes; no modificar las fórmulas de la columna "Nivel según tabla".
 
 ## Cómo correrlas localmente
 
